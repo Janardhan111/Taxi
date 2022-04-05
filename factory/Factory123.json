@@ -1,0 +1,9 @@
+{
+	"name": "Factory123",
+	"location": "westus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "4e716774-f1a8-4f05-b1ff-827ac6356c53",
+		"tenantId": "6cff276f-ce1b-4040-bd7d-ffb7ea9ada1c"
+	}
+}
