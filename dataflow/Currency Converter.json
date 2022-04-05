@@ -1,0 +1,84 @@
+{
+	"name": "Currency Converter",
+	"properties": {
+		"description": "Sample demo data flow to convert currencies",
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "CurrencyDatasetUSD",
+						"type": "DatasetReference"
+					},
+					"name": "USDCurrency"
+				},
+				{
+					"dataset": {
+						"referenceName": "CurrencyDatasetCAD",
+						"type": "DatasetReference"
+					},
+					"name": "CADSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "USDOutput",
+						"type": "DatasetReference"
+					},
+					"name": "USDSink"
+				},
+				{
+					"dataset": {
+						"referenceName": "CADOutput",
+						"type": "DatasetReference"
+					},
+					"name": "CADSink"
+				}
+			],
+			"transformations": [
+				{
+					"name": "Union",
+					"description": "The Union combines 2 streams together"
+				},
+				{
+					"name": "NewCurrencyColumn",
+					"description": "Create a new calculated column from currency rate"
+				},
+				{
+					"name": "ConditionalSplit1",
+					"description": "Split the data on state to create 2 streams"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          PreviousConversionRate as double,",
+				"          Country as string,",
+				"          DateTime1 as string,",
+				"          CurrentConversionRate as double",
+				"     ),",
+				"     allowSchemaDrift: false,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> USDCurrency",
+				"source(output(",
+				"          PreviousConversionRate as double,",
+				"          Country as string,",
+				"          DateTime1 as string,",
+				"          CurrentConversionRate as double",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> CADSource",
+				"USDCurrency, CADSource union(byName: true)~> Union",
+				"Union derive(NewCurrencyRate = round(CurrentConversionRate*1.25)) ~> NewCurrencyColumn",
+				"NewCurrencyColumn split(Country == 'USD',",
+				"     Country == 'CAD',",
+				"     disjoint: false) ~> ConditionalSplit1@(USD, CAD)",
+				"ConditionalSplit1@USD sink(allowSchemaDrift: true,",
+				"     validateSchema: false) ~> USDSink",
+				"ConditionalSplit1@CAD sink(allowSchemaDrift: true,",
+				"     validateSchema: false) ~> CADSink"
+			]
+		}
+	}
+}
